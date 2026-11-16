@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Science Explainer — turn a topic into an interactive visual</title>
+<title>Science Explainer — test the explanation, don't just read it</title>
+<meta name="description" content="Name a science topic. A Pollinations model writes competing explanations, each with a testable prediction. Run experiments, see which explanations survive, and watch the ones that fail get falsified." />
 <style>
-  :root { --bg:#0a0c14; --panel:#131725; --edge:#232842; --acc:#6ee7ff; --dim:#8b90b0; --txt:#e8ebf7; --bad:#ff8080; --good:#6ee7a0; }
+  :root { --bg:#0a0c14; --panel:#131725; --edge:#232842; --acc:#6ee7ff; --dim:#8b90b0; --txt:#e8ebf7; --bad:#ff8080; --good:#6ee7a0; --warn:#ffd479; }
   * { box-sizing:border-box; }
-  body { margin:0; padding:22px 16px 60px; background:var(--bg); color:var(--txt);
+  body { margin:0; padding:22px 16px 70px; background:var(--bg); color:var(--txt);
          font:15px/1.6 system-ui,-apple-system,Segoe UI,sans-serif; }
-  .wrap { max-width:1000px; margin:0 auto; }
+  .wrap { max-width:1020px; margin:0 auto; }
   h1 { font-size:22px; margin:0 0 6px; }
-  .sub { color:var(--dim); font-size:13px; margin-bottom:18px; }
+  .sub { color:var(--dim); font-size:13px; margin-bottom:18px; max-width:70ch; }
   .card { background:var(--panel); border:1px solid var(--edge); border-radius:14px; padding:16px; margin-bottom:14px; }
   .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
   .row .grow { flex:1 1 340px; }
@@ -31,26 +32,52 @@
           color:#b9bfdd; cursor:pointer; }
   .chip:hover { background:#242a49; }
   #out { display:none; }
-  .claim { font-size:14px; color:#c8cde8; white-space:pre-wrap; }
-  .frameWrap { border:1px solid var(--edge); border-radius:12px; overflow:hidden; margin-top:14px; background:#000; }
-  iframe { display:block; width:100%; height:520px; border:0; background:#fff; }
   .toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
-  .warn { font-size:12px; color:var(--dim); }
+  h2 { font-size:16px; margin:0 0 4px; }
+  .lede { color:var(--dim); font-size:13px; margin:0 0 14px; }
+  .hyps { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+  .hyp { border:1px solid var(--edge); border-radius:12px; padding:12px; background:#101426; transition:.18s border-color,.18s opacity; }
+  .hyp.dead { opacity:.45; border-color:#3a2030; }
+  .hyp.survivor { border-color:#1f5a45; }
+  .hyp h3 { font-size:14px; margin:0 0 6px; }
+  .hyp p { margin:0 0 8px; font-size:13px; color:#c8cde8; }
+  .hyp .pred { font-size:12px; color:var(--warn); }
+  .hyp .spark { display:block; width:100%; height:56px; margin:6px 0 8px; }
+  .tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--edge); color:var(--dim); }
+  .tag.dead { color:var(--bad); border-color:#5a2530; }
+  .tag.ok { color:var(--good); border-color:#1f5a45; }
+  .exp { border:1px solid var(--edge); border-radius:12px; padding:14px; margin-top:10px; background:#0f1322; }
+  .exp .q { font-size:14px; margin:0 0 4px; }
+  .exp .setup { font-size:13px; color:var(--dim); margin:0 0 10px; }
+  .choices { display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+  .choice { text-align:left; background:#1a1f36; border:1px solid var(--edge); color:var(--txt); font-weight:500;
+            padding:10px 12px; font-size:13px; }
+  .choice:hover:not(:disabled) { background:#232a49; }
+  .choice.picked-wrong { border-color:#5a2530; background:#2a1520; }
+  .choice.picked-right { border-color:#1f5a45; background:#12251d; }
+  .choice:disabled { opacity:.75; cursor:default; }
+  .verdict { margin-top:10px; font-size:13px; }
+  .verdict.bad { color:var(--bad); } .verdict.good { color:var(--good); }
+  .score { display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; font-size:13px; color:var(--dim); }
+  .score b { color:var(--txt); }
+  .warn { font-size:12px; color:var(--dim); margin-top:14px; }
+  .footer { font-size:12px; color:var(--dim); margin-top:22px; }
+  .footer a { color:#9fb4ff; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Science Explainer</h1>
-  <div class="sub">Name a science topic. A Pollinations model writes an interactive visualisation that runs right here — sliders, animation and all — plus a short explanation of what to look for.</div>
+  <div class="sub">Name a science topic. A Pollinations model writes <b>competing explanations</b>, each with a prediction you can test. Then you run experiments: pick the explanation that matches what was observed, and watch the ones that don't get falsified. A survivor is not a proof — it is an explanation that has not failed yet.</div>
 
   <div class="card">
     <div class="row">
       <div class="grow">
         <label for="topic">Science topic</label>
-        <input id="topic" type="text" value="How chlorophyll absorbs photons in photosynthesis" />
+        <input id="topic" type="text" value="Why is the sky blue" />
       </div>
-      <div style="flex:0 0 170px">
-        <label for="level">Level</label>
+      <div style="flex:0 0 190px">
+        <label for="level">Reader level</label>
         <select id="level">
           <option value="school student" selected>School student</option>
           <option value="undergraduate">Undergraduate</option>
@@ -59,28 +86,42 @@
       </div>
     </div>
     <div class="toolbar">
-      <button id="go">Build the visual</button>
+      <button id="go">Build the lab</button>
       <button id="again" class="ghost" style="display:none">Build it differently</button>
     </div>
     <div id="status"></div>
     <div class="chips" id="chips"></div>
-    <div class="hint"><b>BYOP:</b> approve a scoped key on the Pollinations consent screen (5 Pollen, 7 days). Each build is one chat completion billed to <b>your</b> Pollen.</div>
+    <div class="hint"><b>BYOP:</b> approve a scoped key on the Pollinations consent screen (5 Pollen, 7 days). One build is one chat completion billed to <b>your</b> Pollen.</div>
   </div>
 
   <div class="card">
     <polli-connect app-key="pk_lJdFFPUxFepBLFEG" budget="5" expiry="7" models="text"></polli-connect>
-    <div class="hint">The generated document runs in a sandboxed frame: it can draw and animate, but it cannot read this page, your key, or anything else.</div>
+    <div class="hint">Everything below is generated from the model's reply and rendered by this page. No generated code runs: the predictions are drawn from a fixed set of shapes.</div>
   </div>
 
   <div class="card" id="out">
-    <div class="claim" id="notes"></div>
-    <div class="frameWrap"><iframe id="viz" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div>
-    <div class="warn">Generated on request by a language model. Treat it as an illustration, not a source — check the claim against a textbook before you rely on it.</div>
+    <h2 id="labTitle"></h2>
+    <p class="lede" id="labLede"></p>
+    <div class="hyps" id="hyps"></div>
+
+    <h2 style="margin-top:22px">Experiments</h2>
+    <p class="lede">Each experiment is one observation. Pick the explanation whose prediction it matches. Wrong picks falsify that explanation.</p>
+    <div id="exps"></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="score" id="score"></div>
+
+    <div class="warn">Generated on request by a language model. It can be wrong in a way no experiment here catches. Treat a survivor as a live hypothesis, not a fact.</div>
+  </div>
+
+  <div class="footer">
+    Open source: <a href="https://github.com/mhmdrizki803-boop/science-explainer" target="_blank" rel="noreferrer noopener">mhmdrizki803-boop/science-explainer</a>
+    · built for <a href="https://github.com/pollinations/pollinations/issues/19181" target="_blank" rel="noreferrer noopener">quest #19181</a>
   </div>
 </div>
 
 <script defer src="https://cdn.jsdelivr.net/npm/@pollinations/ui@0.1.0-alpha.20/dist/connect.js"></script>
 <script src="pollinations-client.js"></script>
-<script src="app.js"></script>
+<script src="lab.js"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>

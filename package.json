@@ -1,0 +1,15 @@
+{
+  "name": "science-explainer",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test lab.test.js",
+    "test:ui": "node --test ui.test.js",
+    "test:prompt": "node --test prompt.test.js",
+    "test:all": "node --test lab.test.js ui.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^27.0.0"
+  }
+}

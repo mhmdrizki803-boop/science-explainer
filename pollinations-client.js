@@ -13,7 +13,7 @@
     const DEFAULT_MODEL = "deepseek/deepseek-v4-flash";
 
     async function chatCompletion(messages, opts) {
-        const { apiKey, model = DEFAULT_MODEL, maxTokens = 3000, temperature } = opts || {};
+        const { apiKey, model = DEFAULT_MODEL, maxTokens = 3000, temperature, reasoningEffort } = opts || {};
         if (!apiKey) {
             throw new Error("Missing Pollinations key — approve one with the Connect button first.");
         }
@@ -26,6 +26,9 @@
             max_tokens: maxTokens,
         };
         if (typeof temperature === "number") body.temperature = temperature;
+        // Reasoning models spend the output budget thinking before they write;
+        // lowering effort is what stops a correct prompt from returning 400.
+        if (typeof reasoningEffort === "string") body.reasoning_effort = reasoningEffort;
 
         const res = await fetch(API_URL, {
             method: "POST",
