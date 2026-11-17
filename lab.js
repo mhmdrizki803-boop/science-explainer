@@ -101,7 +101,14 @@ function applyObservation(state, experiment) {
     const expected = new Set(
         experiment.consistent.filter((id) => !state.dead.has(id)),
     );
-    const picked = state.picked;
+    // Observations can be answered in any order, so a pick set can still hold an
+    // explanation that an earlier answer already falsified: the button is removed
+    // from the remaining questions, but the pick itself was recorded before that.
+    // A dead explanation cannot be part of an answer, so drop those picks instead
+    // of counting them against the player.
+    const picked = new Set(
+        [...state.picked].filter((id) => !state.dead.has(id)),
+    );
     const exact =
         expected.size === picked.size && [...expected].every((id) => picked.has(id));
     const nextDead = new Set(state.dead);

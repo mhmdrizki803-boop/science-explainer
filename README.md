@@ -3,9 +3,9 @@
 [![Made with pollinations.ai](https://raw.githubusercontent.com/pollinations/pollinations/main/packages/ui/src/brand/badge-made-with.svg)](https://pollinations.ai/?ref=badge)
 
 Name a science topic. A Pollinations model writes **competing explanations**, each with a
-prediction. Then you run observations: pick the explanations whose prediction matches what was
-measured, and the ones that don't are **falsified**. A survivor is not a proof — it is an
-explanation that has not failed yet.
+prediction. Then you run observations: the model says which explanations each measurement
+contradicts, and those are **falsified** — permanently. Your pick is scored on whether you named
+the survivors exactly. A survivor is not a proof — it is an explanation that has not failed yet.
 
 Built for quest [#19181](https://github.com/pollinations/pollinations/issues/19181).
 
@@ -23,7 +23,8 @@ interaction, which means:
 
 - nothing generated is executed — the only thing rendered is text plus a fixed set of sparklines;
 - the exercise cannot be won by being impressed, only by predicting correctly;
-- a wrong pick is the interesting outcome, because it kills an explanation.
+- a wrong pick costs the point, not the explanation: falsification comes from the observation,
+  so the game cannot be won by clicking;
 
 ## How it works
 

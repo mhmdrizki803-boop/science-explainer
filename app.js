@@ -83,6 +83,9 @@
 
     let lab = null;
     let state = null;
+    // Per-question picks, indexed by experiment, so a later answer can prune the
+    // choices picked before an earlier observation falsified them.
+    let pickedBySection = [];
 
     function renderHypotheses() {
         const box = el("hyps");
@@ -148,6 +151,7 @@
         const box = el("exps");
         box.innerHTML = "";
         let answered = 0;
+        pickedBySection = [];
 
         lab.experiments.forEach((exp, index) => {
             const section = document.createElement("section");
@@ -167,6 +171,7 @@
             // Only explanations still alive are selectable, so a falsified one
             // cannot be picked back into the game.
             const picked = new Set();
+            pickedBySection[index] = picked;
             const live = lab.hypotheses.filter((h) => !state.dead.has(h.id));
             for (const h of live) {
                 const b = document.createElement("button");
@@ -220,9 +225,8 @@
                 updateScore(answered);
 
                 if (answered < lab.experiments.length) {
-                    // Rebuild the remaining experiments so falsified choices
-                    // disappear from the ones not answered yet.
-                    rebuildRemaining(answered);
+                    // Hide falsified choices from the questions not answered yet.
+                    rebuildRemaining();
                 }
             });
 
@@ -232,12 +236,17 @@
     }
 
     /** After an observation lands, hide dead explanations from later questions. */
-    function rebuildRemaining(answered) {
+    function rebuildRemaining() {
         const sections = [...el("exps").querySelectorAll(".exp")];
         sections.forEach((section, index) => {
-            if (index < answered) return;
+            // Observations can be answered in any order, so identify a settled
+            // question by its disabled button rather than by position.
+            const settled = section.querySelector("button.ghost")?.disabled;
+            if (settled) return;
             for (const b of section.querySelectorAll(".choice")) {
-                if (state.dead.has(b.dataset.id)) b.remove();
+                if (!state.dead.has(b.dataset.id)) continue;
+                pickedBySection[index]?.delete(b.dataset.id);
+                b.remove();
             }
         });
     }

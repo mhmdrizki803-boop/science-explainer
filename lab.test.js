@@ -132,3 +132,20 @@ test("an exact pick counts only the explanations still alive", async () => {
     const after = applyObservation(state, lab.experiments[0]);
     assert.equal(after.exact, true);
 });
+
+test("a pick recorded before an out-of-order answer cannot spoil the score", async () => {
+    const { applyObservation, initialState } = await import("./lab.mjs");
+    const lab = normalize(structuredClone(good));
+    let state = initialState(lab);
+    // Answer observation 3 first: it leaves only h1 alive.
+    state = { ...state, picked: new Set(["h1"]) };
+    const third = applyObservation(state, lab.experiments[2]);
+    assert.equal(third.dead.has("h3"), true);
+    // Observation 1 matches h1 and h3, but h3 was already falsified and may
+    // still sit in this question's pick set from before that answer landed.
+    const first = applyObservation(
+        { ...state, dead: third.dead, picked: new Set(["h1", "h3"]) },
+        lab.experiments[0],
+    );
+    assert.equal(first.exact, true, "a stale pick of a dead explanation must not count");
+});

@@ -115,3 +115,50 @@ test("rejects a reply that is not JSON with a readable message", async () => {
     assert.match(w.document.getElementById("status").textContent, /did not return JSON/);
     assert.equal(w.document.getElementById("out").style.display, "");
 });
+
+test("a pick made before an earlier answer cannot spoil a later question", async () => {
+    const w = boot();
+    w.document.getElementById("go").click();
+    await tick();
+
+    const sections = [...w.document.querySelectorAll(".exp")];
+    // Pick h2 for the last question while it is still alive.
+    for (const id of ["h1", "h2"])
+        sections[2].querySelector(`.choice[data-id="${id}"]`).click();
+
+    // Observation 1 falsifies h2, so the last question loses that choice and
+    // the pick recorded before the answer must go with it.
+    for (const id of ["h1", "h3"])
+        sections[0].querySelector(`.choice[data-id="${id}"]`).click();
+    sections[0].querySelector("button.ghost").click();
+    await tick();
+
+    assert.equal(sections[2].querySelector('.choice[data-id="h2"]'), null);
+    sections[2].querySelector("button.ghost").click();
+    await tick();
+    // Observation 3 matches only h1; the stale h2 pick must not make it inexact.
+    assert.match(sections[2].querySelector(".verdict").textContent, /^Exact\./);
+});
+
+test("answering out of order leaves a settled question untouched", async () => {
+    const w = boot();
+    w.document.getElementById("go").click();
+    await tick();
+
+    const sections = [...w.document.querySelectorAll(".exp")];
+    // Answer the last question first: only h1 survives, so h2 and h3 die.
+    sections[2].querySelector('.choice[data-id="h1"]').click();
+    sections[2].querySelector("button.ghost").click();
+    await tick();
+
+    // Answer the first question afterwards.
+    sections[0].querySelector('.choice[data-id="h1"]').click();
+    sections[0].querySelector("button.ghost").click();
+    await tick();
+
+    // The settled question keeps what the player saw and answered...
+    assert.equal(sections[2].querySelectorAll(".choice").length, 3);
+    // ...while the one still open loses the falsified choices.
+    assert.equal(sections[1].querySelector('.choice[data-id="h2"]'), null);
+    assert.equal(sections[1].querySelector('.choice[data-id="h3"]'), null);
+});
